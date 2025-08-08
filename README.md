@@ -1,6 +1,6 @@
 # React Currency Localizer
 
-[![npm version](https://badge.fury.io/js/@iamjr15/react-currency-localizer.svg)](https://badge.fury.io/js/@iamjr15/react-currency-localizer)
+[![npm version](https://badge.fury.io/js/@iamjr15%2Freact-currency-localizer.svg?icon=si%3Anpm)](https://badge.fury.io/js/@iamjr15%2Freact-currency-localizer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

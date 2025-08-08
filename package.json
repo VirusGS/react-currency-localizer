@@ -42,7 +42,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iamjr15/react-currency-localizer.git"
+    "url": "git+https://github.com/iamjr15/react-currency-localizer.git"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5.0.0",
