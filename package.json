@@ -1,0 +1,78 @@
+{
+  "name": "@iamjr15/react-currency-localizer",
+  "version": "1.1.0",
+  "description": "A React hook to display prices in a user's local currency using IP geolocation with robust validation and error handling",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:integration": "VITE_RUN_INTEGRATION_TESTS=true vitest --run",
+    "test:integration:watch": "VITE_RUN_INTEGRATION_TESTS=true vitest",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "react",
+    "currency",
+    "converter",
+    "hook",
+    "geolocation",
+    "exchange-rate",
+    "localization",
+    "pricing",
+    "internationalization"
+  ],
+  "author": "Jigyansu Rout",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iamjr15/react-currency-localizer.git"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5.0.0",
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node-fetch": "^2.6.13",
+    "@types/react": "^18.3.13",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "jsdom": "^26.1.0",
+    "node-fetch": "^3.3.2",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.19.1",
+    "vite": "^6.0.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@tanstack/query-sync-storage-persister": "^5.17.0",
+    "@tanstack/react-query-persist-client": "^5.17.0"
+  }
+}
