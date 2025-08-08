@@ -62,9 +62,10 @@ export const useCurrencyConverter = ({
     isLoading: isGeoLoading,
   } = useQuery<GeolocationResponse, Error>({
     queryKey: ['geolocation'],
-    queryFn: async (): Promise<GeolocationResponse> => {
+    queryFn: async ({ signal }): Promise<GeolocationResponse> => {
       const response = await fetch(
-        'http://ip-api.com/json/?fields=status,currency,countryCode,message'
+        'https://ipapi.co/json/',
+        { signal }
       )
       
       if (!response.ok) {
@@ -73,11 +74,15 @@ export const useCurrencyConverter = ({
       
       const data = await response.json()
       
-      if (data.status === 'fail') {
-        throw new Error(data.message || 'Geolocation detection failed')
+      if (data.error) {
+        throw new Error(data.reason || 'Geolocation detection failed')
       }
       
-      return data
+      return {
+        status: 'success',
+        currency: data.currency,
+        countryCode: data.country_code
+      }
     },
     // Only run this query if manual currency is NOT provided AND API key is valid
     enabled: !upperManualCurrency && !apiKeyError,
@@ -99,10 +104,20 @@ export const useCurrencyConverter = ({
     error: exchangeError,
     isLoading: isExchangeLoading,
   } = useQuery<ExchangeRateResponse, Error>({
-    queryKey: ['exchange-rates', upperBaseCurrency, localCurrency],
-    queryFn: async (): Promise<ExchangeRateResponse> => {
+    queryKey: ['exchange-rates', upperBaseCurrency, localCurrency, apiKey],
+    queryFn: async ({ signal }): Promise<ExchangeRateResponse> => {
+      // Optimization: skip API call if converting to same currency
+      if (localCurrency === upperBaseCurrency) {
+        return {
+          result: 'success',
+          base_code: upperBaseCurrency,
+          conversion_rates: { [upperBaseCurrency]: 1 }
+        }
+      }
+      
       const response = await fetch(
-        `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${upperBaseCurrency}`
+        `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${upperBaseCurrency}`,
+        { signal }
       )
       
       if (!response.ok) {
@@ -158,7 +173,7 @@ export const useCurrencyConverter = ({
   const error = geoError || exchangeError || currencyMismatchError || apiKeyError
 
   const convertedPrice = (typeof basePrice === 'number') && exchangeRate !== null && !currencyMismatchError
-    ? parseFloat((basePrice * exchangeRate).toFixed(2))
+    ? basePrice * exchangeRate
     : null
 
   // Prepare the return object - memoized to prevent unnecessary re-renders

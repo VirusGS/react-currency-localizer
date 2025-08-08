@@ -10,7 +10,7 @@ A React hook for automatically displaying prices in a user's local currency usin
 
 ### Core Architecture
 - **Two-API Strategy**: Decoupled architecture using specialized services for maximum accuracy
-  - **Geolocation**: `ip-api.com` for currency detection (no API key required)
+  - **Geolocation**: `ipapi.co` for HTTPS-compatible currency detection (no API key required)
   - **Exchange Rates**: `exchangerate-api.com` for real-time conversion rates
 - **Intelligent Caching**: Multi-tier caching strategy optimized for each data type
   - **Persistent Geolocation**: 24-hour localStorage caching (location rarely changes)
@@ -26,10 +26,11 @@ A React hook for automatically displaying prices in a user's local currency usin
 - **Manual Override Support**: Bypass geolocation with explicit currency selection
 
 ### Production Ready
-- **Lightweight**: Only ~20kB (gzipped: ~6.5kB) with zero dependencies
+- **Lightweight**: Only ~21kB (gzipped: ~6.8kB) with minimal runtime dependencies
 - **Framework Agnostic**: Works with any React application
+- **HTTPS Compatible**: Uses HTTPS-only APIs safe for production deployments
 - **Free APIs**: Uses only free-tier APIs (no credit card required)
-- **Comprehensive Testing**: 49 tests including real API integration validation
+- **Comprehensive Testing**: Extensive suite including real API integration validation
 
 ## 📦 Installation
 
@@ -176,6 +177,9 @@ function ProductGrid() {
           <LocalizedPrice 
             basePrice={product.price}
             baseCurrency="USD"
+            // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
+            // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
+            // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
             apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
           />
         </div>
@@ -203,6 +207,9 @@ function PricingTable() {
           <LocalizedPrice 
             basePrice={plan.price}
             baseCurrency="USD"
+            // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
+            // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
+            // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
             apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
             formatPrice={(price, currency) => 
               `${currency} ${price.toFixed(2)}/month`
@@ -237,6 +244,9 @@ function CurrencySelector() {
       <LocalizedPrice 
         basePrice={99.99}
         baseCurrency="USD"
+        // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
+        // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
+        // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
         apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
         manualCurrency={selectedCurrency || undefined}
       />
@@ -252,6 +262,9 @@ function PriceWithStates() {
   const { convertedPrice, localCurrency, isLoading, error } = useCurrencyConverter({
     basePrice: 59.99,
     baseCurrency: 'usd', // Case-insensitive! Will be converted to 'USD'
+    // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
+    // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
+    // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
     apiKey: process.env.REACT_APP_EXCHANGE_API_KEY,
     onSuccess: (result) => {
       console.log('Conversion successful:', result)
@@ -314,6 +327,9 @@ function CustomErrorPrice() {
     <LocalizedPrice 
       basePrice={99.99}
       baseCurrency="USD"
+      // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
+      // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
+      // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
       apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
       errorComponent={(error) => (
         <div className="price-error">
@@ -334,9 +350,9 @@ This package uses a **carefully designed architecture** for maximum reliability 
 ### Two-API Strategy
 We use a **decoupled, two-API approach** for maximum accuracy and flexibility:
 
-1. **Specialized Geolocation Service**: `ip-api.com`
-   - **Why**: Dedicated to IP-based location data for optimal accuracy
-   - **Advantage**: No API key required, 45 requests/minute, robust rate limiting
+1. **Specialized Geolocation Service**: `ipapi.co`
+   - **Why**: Dedicated to IP-based location data with HTTPS support for optimal accuracy
+   - **Advantage**: No API key required, HTTPS-compatible, robust rate limiting
    - **Philosophy**: Use specialized services for what they do best—identifying location-based data
 
 2. **Specialized Financial Data Service**: `exchangerate-api.com`  
@@ -373,8 +389,8 @@ We implement **data-type-specific caching** optimized for each type of data:
    - Get your API key (1,500 requests/month free)
 
 2. **IP Geolocation** (Automatic):
-   - Uses [ip-api.com](http://ip-api.com) (no key required)
-   - 45 requests/minute limit
+   - Uses [ipapi.co](https://ipapi.co) (no key required)
+   - HTTPS-compatible for secure deployments
    - Falls back gracefully on rate limits
 
 ### Environment Variables
@@ -387,11 +403,17 @@ VITE_EXCHANGE_API_KEY=your_exchangerate_api_key_here
 VITE_RUN_INTEGRATION_TESTS=true
 ```
 
-For React apps, you might also want:
+For different frameworks:
 
 ```bash
-# .env
+# Vite (browser-exposed)
+VITE_EXCHANGE_API_KEY=your_exchangerate_api_key_here
+
+# Create React App (browser-exposed)
 REACT_APP_EXCHANGE_API_KEY=your_exchangerate_api_key_here
+
+# Next.js (browser-exposed)
+NEXT_PUBLIC_EXCHANGE_API_KEY=your_exchangerate_api_key_here
 ```
 
 ### Custom QueryClient Configuration
@@ -425,6 +447,47 @@ function App() {
 ```
 
 > **Note**: The default configuration already implements the optimal caching strategy. Custom configuration is optional.
+
+## ⚠️ Important Considerations
+
+### Server-Side Rendering (SSR) Caveats
+
+When using this library with SSR frameworks (Next.js, Nuxt, SvelteKit), be aware that:
+
+- **IP Geolocation runs on the server**: The detected location reflects the server's IP, not the user's
+- **Hydration mismatches possible**: Server-rendered currency may differ from client-side detection
+- **Recommended approach**: Pass `manualCurrency` prop or perform geolocation client-side only
+
+```tsx
+// For SSR: Disable geolocation on server, enable on client
+const [isClient, setIsClient] = useState(false)
+
+useEffect(() => {
+  setIsClient(true)
+}, [])
+
+return (
+  <LocalizedPrice 
+    basePrice={99.99}
+    baseCurrency="USD"
+    apiKey={process.env.NEXT_PUBLIC_EXCHANGE_API_KEY}
+    manualCurrency={!isClient ? 'USD' : undefined} // Use USD on server, auto-detect on client
+  />
+)
+```
+
+### HTTPS Requirements
+
+This library uses HTTPS-only APIs (`ipapi.co`, `exchangerate-api.com`) to ensure compatibility with secure deployments. Mixed content (HTTP requests from HTTPS sites) is automatically blocked by modern browsers.
+
+### Runtime Dependencies
+
+While the library has minimal dependencies, it does include:
+- `@tanstack/react-query` (peer dependency for state management)
+- `@tanstack/query-sync-storage-persister` (for localStorage caching)
+- `@tanstack/react-query-persist-client` (for persistence integration)
+
+Total bundle impact: ~20kB minified, ~6.5kB gzipped.
 
 ## 🌍 Supported Currencies
 
@@ -819,13 +882,13 @@ This implementation is built on carefully considered architectural choices:
 ✅ **LocalizedPrice Component** - Declarative wrapper component  
 ✅ **TypeScript Support** - Full type safety and IntelliSense  
 ✅ **Free APIs Only** - Zero cost barrier to entry  
-✅ **IP-API.com Selection** - Best-in-class geolocation service  
+✅ **ipapi.co Selection** - HTTPS-compatible geolocation service  
 ✅ **ExchangeRate-API.com Selection** - Reliable currency data provider  
 
 ## 🙏 Acknowledgments
 
 - [ExchangeRate-API](https://exchangerate-api.com) for reliable exchange rate data
-- [IP-API](http://ip-api.com) for free IP geolocation services
+- [ipapi.co](https://ipapi.co) for free HTTPS-compatible IP geolocation services
 - [TanStack Query](https://tanstack.com/query) for excellent caching and data fetching
 - The React community for inspiration and feedback
 

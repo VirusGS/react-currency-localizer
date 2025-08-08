@@ -35,12 +35,11 @@ export interface CurrencyResult {
 }
 
 /**
- * Response structure from the ip-api.com geolocation service
+ * Response structure from the ipapi.co geolocation service
  */
 export interface GeolocationResponse {
   status: 'success' | 'fail'
   currency: string
-  message?: string
   countryCode?: string
 }
 

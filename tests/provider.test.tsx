@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { QueryClient } from '@tanstack/react-query'
 import { CurrencyConverterProvider } from '../src/provider'
 import { useCurrencyConverter } from '../src/hooks/useCurrencyConverter'
 import { createFetchMock } from './__mocks__/fetch'
@@ -15,7 +16,7 @@ const TestComponent = () => {
   return (
     <div>
       <div data-testid="loading">{result.isLoading ? 'loading' : 'loaded'}</div>
-      <div data-testid="price">{result.localPrice || 'no-price'}</div>
+      <div data-testid="price">{result.convertedPrice || 'no-price'}</div>
       <div data-testid="currency">{result.localCurrency || 'no-currency'}</div>
     </div>
   )
@@ -42,17 +43,17 @@ describe('CurrencyConverterProvider', () => {
   })
 
   it('should allow custom QueryClient configuration', () => {
-    const customOptions = {
+    const customQueryClient = new QueryClient({
       defaultOptions: {
         queries: {
           staleTime: 10000,
           gcTime: 20000
         }
       }
-    }
+    })
 
     render(
-      <CurrencyConverterProvider queryClientOptions={customOptions}>
+      <CurrencyConverterProvider queryClient={customQueryClient}>
         <TestComponent />
       </CurrencyConverterProvider>
     )
@@ -70,17 +71,6 @@ describe('CurrencyConverterProvider', () => {
     )
 
     // Verify provider renders and doesn't throw persistence errors
-    expect(screen.getByTestId('loading')).toBeInTheDocument()
-  })
-
-  it('should allow disabling persistence', () => {
-    render(
-      <CurrencyConverterProvider enablePersistence={false}>
-        <TestComponent />
-      </CurrencyConverterProvider>
-    )
-
-    // Should render successfully without persistence
     expect(screen.getByTestId('loading')).toBeInTheDocument()
   })
 

@@ -61,8 +61,6 @@ export const LocalizedPrice: React.FC<LocalizedPriceProps> = ({
     : new Intl.NumberFormat(undefined, {
         style: 'currency',
         currency: localCurrency || baseCurrency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
       }).format(convertedPrice)
 
   return <span title={`Converted from ${basePrice} ${baseCurrency}`}>{formattedPrice}</span>

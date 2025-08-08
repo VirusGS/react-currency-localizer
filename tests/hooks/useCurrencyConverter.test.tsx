@@ -75,25 +75,12 @@ describe('useCurrencyConverter', () => {
     it('should convert to different currency when geolocation returns non-USD', async () => {
       // Mock for European IP
       global.fetch = vi.fn().mockImplementation((url: string) => {
-        if (url.includes('ip-api.com')) {
+        if (url.includes('ipapi.co')) {
           return Promise.resolve({
             ok: true,
             json: () => Promise.resolve({
-              status: 'success',
               currency: 'EUR',
-              country: 'Germany',
-              countryCode: 'DE',
-              region: 'BY',
-              regionName: 'Bavaria',
-              city: 'Munich',
-              zip: '80331',
-              lat: 48.1351,
-              lon: 11.5820,
-              timezone: 'Europe/Berlin',
-              isp: 'Example ISP',
-              org: 'Example Org',
-              as: 'AS12345 Example',
-              query: '192.0.2.1'
+              country_code: 'DE'
             })
           })
         }
@@ -231,12 +218,12 @@ describe('useCurrencyConverter', () => {
     it('should handle exchange rate API errors', async () => {
       // Mock successful geolocation but failed exchange rate
       global.fetch = vi.fn().mockImplementation((url: string) => {
-        if (url.includes('ip-api.com')) {
+        if (url.includes('ipapi.co')) {
           return Promise.resolve({
             ok: true,
             json: () => Promise.resolve({
-              status: 'success',
-              currency: 'EUR'
+              currency: 'EUR',
+              country_code: 'DE'
             })
           })
         }
@@ -278,10 +265,8 @@ describe('useCurrencyConverter', () => {
   it('should handle currency mismatch between geolocation and exchange rate APIs', async () => {
     // Mock geolocation API to return an unsupported currency
     const mockGeoResponse = {
-      status: 'success',
       currency: 'XYZ', // Fake currency code
-      countryCode: 'XX',
-      country: 'Unknown Country'
+      countryCode: 'XX'
     }
 
     // Mock exchange rate API with normal response (but without XYZ currency)
@@ -297,10 +282,13 @@ describe('useCurrencyConverter', () => {
     }
 
     ;(fetch as any).mockImplementation((url: string) => {
-      if (url.includes('ip-api.com')) {
+      if (url.includes('ipapi.co')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve(mockGeoResponse),
+          json: () => Promise.resolve({
+            currency: mockGeoResponse.currency,
+            country_code: mockGeoResponse.countryCode
+          }),
         })
       }
       if (url.includes('exchangerate-api.com')) {

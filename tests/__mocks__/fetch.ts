@@ -4,20 +4,8 @@ import type { GeolocationResponse, ExchangeRateResponse } from '../../src/types'
 // Mock fetch responses
 export const mockGeolocationResponse: GeolocationResponse = {
   status: 'success',
-  country: 'United States',
-  countryCode: 'US',
-  region: 'CA',
-  regionName: 'California',
-  city: 'Los Angeles',
-  zip: '90210',
-  lat: 34.0522,
-  lon: -118.2437,
-  timezone: 'America/Los_Angeles',
-  isp: 'Example ISP',
-  org: 'Example Org',
-  as: 'AS12345 Example',
-  query: '192.0.2.1',
-  currency: 'USD'
+  currency: 'USD',
+  countryCode: 'US'
 }
 
 export const mockExchangeRateResponse: ExchangeRateResponse = {
@@ -47,7 +35,7 @@ export const mockExchangeRateResponse: ExchangeRateResponse = {
 export const createFetchMock = () => {
   return vi.fn().mockImplementation((url: string) => {
     // Mock geolocation API
-    if (url.includes('ip-api.com')) {
+    if (url.includes('ipapi.co')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockGeolocationResponse)
