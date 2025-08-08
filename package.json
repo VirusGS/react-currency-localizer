@@ -1,6 +1,6 @@
 {
   "name": "@iamjr15/react-currency-localizer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A React hook to display prices in a user's local currency using HTTPS-compatible IP geolocation with robust validation and error handling",
   "type": "module",
   "main": "./dist/index.cjs.js",
